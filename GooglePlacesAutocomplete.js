@@ -152,6 +152,7 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
   };
 
   const [stateText, setStateText] = useState('');
+  const [skipCache, setSkipCache] = useState(false);
   const [dataSource, setDataSource] = useState(buildRowsFromResults([]));
   const [listViewDisplayed, setListViewDisplayed] = useState(
     props.listViewDisplayed === 'auto' ? false : props.listViewDisplayed,
@@ -511,7 +512,8 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
     if (!url) {
       return;
     }
-    if (props.filterPredefinedPlaces && Array.isArray(props.predefinedPlaces) && props.predefinedPlaces.length > 0 && text && text.length > 0) {
+    const skip_cache =  props.requestUrl && props.requestUrl.headers && props.requestUrl.headers['skip-cache'] === 'true';
+    if (!skip_cache && props.filterPredefinedPlaces && Array.isArray(props.predefinedPlaces) && props.predefinedPlaces.length > 0 && text && text.length > 0) {
         const lStr = text.trim().toLowerCase();
         _results = props.predefinedPlaces?.filter?.((a) =>
           a.description?.trim?.()?.toLowerCase?.()?.includes?.(lStr),
@@ -586,9 +588,10 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debounceData = useMemo(() => debounce(_request, props.debounce), [
+  const debounceData = useMemo(() => {    
+    return debounce(_request, props.debounce) }, [
     props.query,
-    url,
+    url, skipCache
   ]);
 
   const _onChangeText = (text) => {
@@ -907,9 +910,10 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
           onPress={() => {
             props.requestUrl.headers = {
               ...props.requestUrl.headers,
-              'skip-cache': 'true',
+              'skip-cache': !skipCache ? 'true': 'false',
             }
-            _onChangeText(stateText)
+            setSkipCache(!skipCache);
+            _handleChangeText(stateText);
           }}
         >
           <Text>Can't find your address? Tap here to load more</Text>
