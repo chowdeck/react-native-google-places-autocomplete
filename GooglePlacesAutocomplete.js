@@ -23,6 +23,7 @@ import {
   Text,
   TextInput,
   View,
+  TouchableOpacity,
 } from 'react-native';
 
 const defaultStyles = {
@@ -510,6 +511,16 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
     if (!url) {
       return;
     }
+    if (props.filterPredefinedPlaces && Array.isArray(props.predefinedPlaces) && props.predefinedPlaces.length > 0 && text && text.length > 0) {
+        const lStr = text.trim().toLowerCase();
+        _results = props.predefinedPlaces?.filter?.((a) =>
+          a.description?.trim?.()?.toLowerCase?.()?.includes?.(lStr),
+        );
+        if (_results.length > 0) {
+          setDataSource(buildRowsFromResults(_results));
+          return;
+        }
+    }
     if (supportedPlatform() && text && text.length >= props.minLength) {
       const request = new XMLHttpRequest();
       _requests.push(request);
@@ -884,6 +895,26 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
       )}
       {props.inbetweenCompo}
       {_getFlatList()}
+      {listViewDisplayed === true && stateText ? (
+        <TouchableOpacity
+          style={{
+            paddingVertical: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f2f2f2',
+            borderRadius: 8,
+          }}
+          onPress={() => {
+            props.requestUrl.headers = {
+              ...props.requestUrl.headers,
+              'skip-cache': 'true',
+            }
+            _onChangeText(stateText)
+          }}
+        >
+          <Text>Can't find your address? Tap here to load more</Text>
+        </TouchableOpacity>
+      ) : null}
       {props.children}
     </View>
   );
@@ -942,6 +973,7 @@ GooglePlacesAutocomplete.propTypes = {
   textInputHide: PropTypes.bool,
   textInputProps: PropTypes.object,
   timeout: PropTypes.number,
+  filterPredefinedPlaces: PropTypes.bool,
 };
 
 GooglePlacesAutocomplete.defaultProps = {
@@ -986,6 +1018,7 @@ GooglePlacesAutocomplete.defaultProps = {
   textInputHide: false,
   textInputProps: {},
   timeout: 20000,
+  filterPredefinedPlaces: false
 };
 
 GooglePlacesAutocomplete.displayName = 'GooglePlacesAutocomplete';
