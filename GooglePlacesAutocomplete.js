@@ -507,12 +507,13 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
     }
   };
 
+  const skip_cache =  props.requestUrl && props.requestUrl.headers && props.requestUrl.headers['skip-cache'] === 'true';
+
   const _request = (text) => {
     _abortRequests();
     if (!url) {
       return;
     }
-    const skip_cache =  props.requestUrl && props.requestUrl.headers && props.requestUrl.headers['skip-cache'] === 'true';
     if (!skip_cache && props.filterPredefinedPlaces && Array.isArray(props.predefinedPlaces) && props.predefinedPlaces.length > 0 && text && text.length > 0) {
         const lStr = text.trim().toLowerCase();
         _results = props.predefinedPlaces?.filter?.((a) =>
@@ -898,7 +899,7 @@ export const GooglePlacesAutocomplete = forwardRef((props, ref) => {
       )}
       {props.inbetweenCompo}
       {_getFlatList()}
-      {listViewDisplayed === true && stateText ? (
+      {!skip_cache && listViewDisplayed === true && stateText ? (
         <TouchableOpacity
           style={{
             paddingVertical: 10,
